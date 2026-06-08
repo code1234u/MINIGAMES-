@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Cube Jump</title>
+
+<style>
+body {
+    margin: 0;
+    background: white;
+    text-align: center;
+    font-family: Arial;
+}
+
+/* TOP IMAGE */
+#topImg {
+    max-width: 180px;
+    margin-top: 10px;
+}
+
+/* MENU */
+#menu {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 70%;
+    margin: 20px auto;
+}
+
+.card {
+    background: #bbb;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    border: 2px solid #444;
+}
+
+/* GAME AREA */
+#game {
+    display: none;
+    width: 100%;
+    height: 100vh;
+    background: white;
+    position: relative;
+    overflow: hidden;
+}
+
+/* ground line */
+#ground {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 3px;
+    background: black;
+}
+
+/* player cube */
+#cube {
+    position: absolute;
+    left: 60px;
+    bottom: 3px;
+    width: 35px;
+    height: 35px;
+    background: black;
+}
+
+/* obstacles */
+.obs {
+    position: absolute;
+    bottom: 3px;
+    width: 20px;
+    height: 35px;
+    background: black;
+}
+</style>
+</head>
+
+<body>
+
+<img id="topImg" src="WebGames.png">
+
+<div id="menu">
+    <div class="card" onclick="start()">Cube Jump</div>
+    <div class="card" onclick="start()">Cube Jump</div>
+    <div class="card" onclick="start()">Cube Jump</div>
+    <div class="card" onclick="start()">Cube Jump</div>
+</div>
+
+<div id="game">
+    <div id="ground"></div>
+    <div id="cube"></div>
+</div>
+
+<script>
+let menu = document.getElementById("menu");
+let game = document.getElementById("game");
+let cube = document.getElementById("cube");
+
+let y = 0;
+let vel = 0;
+let gravity = 0.8;
+let jumping = false;
+
+let obstacles = [];
+let running = false;
+let speed = 6;
+
+function start() {
+    menu.style.display = "none";
+    game.style.display = "block";
+    running = true;
+
+    spawn();
+    loop();
+}
+
+/* jump */
+function jump() {
+    if (!jumping) {
+        vel = 12;
+        jumping = true;
+    }
+}
+
+document.addEventListener("keydown", e => {
+    if (e.code === "Space") jump();
+});
+
+document.addEventListener("touchstart", jump);
+
+/* spawn obstacles */
+function spawn() {
+    if (!running) return;
+
+    let o = document.createElement("div");
+    o.classList.add("obs");
+    o.style.left = "100%";
+    game.appendChild(o);
+    obstacles.push(o);
+
+    setTimeout(spawn, 1400);
+}
+
+/* game loop */
+function loop() {
+    if (!running) return;
+
+    // jump physics
+    y += vel;
+    vel -= gravity;
+
+    if (y < 0) {
+        y = 0;
+        jumping = false;
+    }
+
+    cube.style.bottom = (3 + y) + "px";
+
+    // move obstacles
+    for (let i = 0; i < obstacles.length; i++) {
+        let o = obstacles[i];
+        let left = parseFloat(o.style.left);
+        left -= speed;
+        o.style.left = left + "px";
+
+        // collision
+        if (left < 85 && left > 40 && y < 30) {
+            reset();
+        }
+
+        // remove off screen
+        if (left < -40) {
+            o.remove();
+            obstacles.splice(i, 1);
+            i--;
+        }
+    }
+
+    requestAnimationFrame(loop);
+}
+
+/* reset */
+function reset() {
+    alert("Game Over");
+
+    obstacles.forEach(o => o.remove());
+    obstacles = [];
+
+    running = false;
+    menu.style.display = "grid";
+    game.style.display = "none";
+
+    y = 0;
+    vel = 0;
+}
+</script>
+
+</body>
+</html>
