@@ -12,35 +12,35 @@ body {
     overflow: hidden;
 }
 
-/* BIG TITLE */
-#title {
-    font-size: 50px;
-    font-weight: bold;
-    margin: 20px;
+/* MENU */
+#menu {
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
 }
 
-/* HOME BUTTON */
-#startBtn {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: #bbb;
-    padding: 15px;
-    border: 2px solid #333;
+#startBox {
+    width: 220px;
+    height: 130px;
+    background: #ccc;
+    border: 3px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
     cursor: pointer;
-    font-weight: bold;
 }
 
-/* GAME SCREEN */
+/* GAME */
 #game {
     display: none;
     width: 100%;
     height: 100vh;
-    background: white;
     position: relative;
+    background: white;
 }
 
-/* ground */
 #ground {
     position: absolute;
     bottom: 0;
@@ -49,7 +49,6 @@ body {
     background: black;
 }
 
-/* cube */
 #cube {
     position: absolute;
     left: 60px;
@@ -59,48 +58,33 @@ body {
     background: black;
 }
 
-/* cactus (advanced look) */
-.cactus {
+#cactus {
     position: absolute;
     bottom: 4px;
     width: 25px;
     height: 45px;
     background: green;
-    border-left: 4px solid white;
-    border-right: 4px solid black;
-}
-
-/* GAME OVER SCREEN */
-#overlay {
-    display: none;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: grey;
-    color: white;
-    font-size: 40px;
-    text-align: center;
-    padding-top: 40vh;
 }
 </style>
 </head>
 
 <body>
 
-<div id="title">CUBE JUMP</div>
-
-<div id="startBtn" onclick="startGame()">Start</div>
+<div id="menu">
+    <div id="startBox" onclick="startGame()">CUBE JUMP</div>
+</div>
 
 <div id="game">
     <div id="ground"></div>
     <div id="cube"></div>
-    <div id="overlay">GAME OVER</div>
+    <div id="cactus"></div>
 </div>
 
 <script>
+let menu = document.getElementById("menu");
 let game = document.getElementById("game");
 let cube = document.getElementById("cube");
-let overlay = document.getElementById("overlay");
+let cactus = document.getElementById("cactus");
 
 let y = 0;
 let vel = 0;
@@ -108,22 +92,21 @@ let gravity = 0.8;
 let jumping = false;
 
 let running = false;
-let obstacle = null;
+let x = 120;
 
-/* START GAME */
+/* START */
 function startGame() {
-    document.getElementById("title").style.display = "none";
-    document.getElementById("startBtn").style.display = "none";
-
+    menu.style.display = "none";
     game.style.display = "block";
-    overlay.style.display = "none";
 
     running = true;
-    spawn();
+    x = 120;
+
+    setTimeout(spawnLoop, 10000); // ⭐ FIRST cactus after 10 seconds
     loop();
 }
 
-/* JUMP */
+/* jump */
 function jump() {
     if (!jumping && running) {
         vel = 12;
@@ -137,21 +120,15 @@ document.addEventListener("keydown", e => {
 
 document.addEventListener("touchstart", jump);
 
-/* SPAWN ONE OBSTACLE AT A TIME */
-function spawn() {
+/* cactus loop */
+function spawnLoop() {
     if (!running) return;
 
-    if (obstacle) obstacle.remove();
-
-    obstacle = document.createElement("div");
-    obstacle.classList.add("cactus");
-    obstacle.style.left = "100%";
-    game.appendChild(obstacle);
-
-    setTimeout(spawn, 1800);
+    x = 120;
+    setTimeout(spawnLoop, 2000); // next cactus every 2 sec after first
 }
 
-/* GAME LOOP */
+/* game loop */
 function loop() {
     if (!running) return;
 
@@ -167,33 +144,16 @@ function loop() {
     cube.style.bottom = (4 + y) + "px";
 
     // move cactus
-    if (obstacle) {
-        let left = parseFloat(obstacle.style.left);
-        left -= 7;
-        obstacle.style.left = left + "px";
+    x -= 7;
+    cactus.style.left = x + "px";
 
-        // collision
-        if (left < 85 && left > 40 && y < 30) {
-            gameOver();
-        }
-
-        if (left < -50) {
-            obstacle.remove();
-            obstacle = null;
-        }
+    // collision
+    if (x < 90 && x > 40 && y < 30) {
+        alert("GAME OVER");
+        location.reload();
     }
 
     requestAnimationFrame(loop);
-}
-
-/* GAME OVER */
-function gameOver() {
-    running = false;
-    overlay.style.display = "block";
-
-    setTimeout(() => {
-        location.reload(); // back to home screen reset
-    }, 1500);
 }
 </script>
 
