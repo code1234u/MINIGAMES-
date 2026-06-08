@@ -7,119 +7,125 @@
 <style>
 body {
     margin: 0;
-    background: white;
-    text-align: center;
     font-family: Arial;
+    background: white;
+    overflow: hidden;
 }
 
-/* TOP IMAGE */
-#topImg {
-    max-width: 180px;
-    margin-top: 10px;
+/* BIG TITLE */
+#title {
+    font-size: 50px;
+    font-weight: bold;
+    margin: 20px;
 }
 
-/* MENU */
-#menu {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    width: 70%;
-    margin: 20px auto;
-}
-
-.card {
+/* HOME BUTTON */
+#startBtn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
     background: #bbb;
-    height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 15px;
+    border: 2px solid #333;
     cursor: pointer;
     font-weight: bold;
-    border: 2px solid #444;
 }
 
-/* GAME AREA */
+/* GAME SCREEN */
 #game {
     display: none;
     width: 100%;
     height: 100vh;
     background: white;
     position: relative;
-    overflow: hidden;
 }
 
-/* ground line */
+/* ground */
 #ground {
     position: absolute;
     bottom: 0;
     width: 100%;
-    height: 3px;
+    height: 4px;
     background: black;
 }
 
-/* player cube */
+/* cube */
 #cube {
     position: absolute;
     left: 60px;
-    bottom: 3px;
-    width: 35px;
-    height: 35px;
+    bottom: 4px;
+    width: 40px;
+    height: 40px;
     background: black;
 }
 
-/* obstacles */
-.obs {
+/* cactus (advanced look) */
+.cactus {
     position: absolute;
-    bottom: 3px;
-    width: 20px;
-    height: 35px;
-    background: black;
+    bottom: 4px;
+    width: 25px;
+    height: 45px;
+    background: green;
+    border-left: 4px solid white;
+    border-right: 4px solid black;
+}
+
+/* GAME OVER SCREEN */
+#overlay {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: grey;
+    color: white;
+    font-size: 40px;
+    text-align: center;
+    padding-top: 40vh;
 }
 </style>
 </head>
 
 <body>
 
-<img id="topImg" src="WebGames.png">
+<div id="title">CUBE JUMP</div>
 
-<div id="menu">
-    <div class="card" onclick="start()">Cube Jump</div>
-    <div class="card" onclick="start()">Cube Jump</div>
-    <div class="card" onclick="start()">Cube Jump</div>
-    <div class="card" onclick="start()">Cube Jump</div>
-</div>
+<div id="startBtn" onclick="startGame()">Start</div>
 
 <div id="game">
     <div id="ground"></div>
     <div id="cube"></div>
+    <div id="overlay">GAME OVER</div>
 </div>
 
 <script>
-let menu = document.getElementById("menu");
 let game = document.getElementById("game");
 let cube = document.getElementById("cube");
+let overlay = document.getElementById("overlay");
 
 let y = 0;
 let vel = 0;
 let gravity = 0.8;
 let jumping = false;
 
-let obstacles = [];
 let running = false;
-let speed = 6;
+let obstacle = null;
 
-function start() {
-    menu.style.display = "none";
+/* START GAME */
+function startGame() {
+    document.getElementById("title").style.display = "none";
+    document.getElementById("startBtn").style.display = "none";
+
     game.style.display = "block";
-    running = true;
+    overlay.style.display = "none";
 
+    running = true;
     spawn();
     loop();
 }
 
-/* jump */
+/* JUMP */
 function jump() {
-    if (!jumping) {
+    if (!jumping && running) {
         vel = 12;
         jumping = true;
     }
@@ -131,24 +137,25 @@ document.addEventListener("keydown", e => {
 
 document.addEventListener("touchstart", jump);
 
-/* spawn obstacles */
+/* SPAWN ONE OBSTACLE AT A TIME */
 function spawn() {
     if (!running) return;
 
-    let o = document.createElement("div");
-    o.classList.add("obs");
-    o.style.left = "100%";
-    game.appendChild(o);
-    obstacles.push(o);
+    if (obstacle) obstacle.remove();
 
-    setTimeout(spawn, 1400);
+    obstacle = document.createElement("div");
+    obstacle.classList.add("cactus");
+    obstacle.style.left = "100%";
+    game.appendChild(obstacle);
+
+    setTimeout(spawn, 1800);
 }
 
-/* game loop */
+/* GAME LOOP */
 function loop() {
     if (!running) return;
 
-    // jump physics
+    // physics
     y += vel;
     vel -= gravity;
 
@@ -157,44 +164,36 @@ function loop() {
         jumping = false;
     }
 
-    cube.style.bottom = (3 + y) + "px";
+    cube.style.bottom = (4 + y) + "px";
 
-    // move obstacles
-    for (let i = 0; i < obstacles.length; i++) {
-        let o = obstacles[i];
-        let left = parseFloat(o.style.left);
-        left -= speed;
-        o.style.left = left + "px";
+    // move cactus
+    if (obstacle) {
+        let left = parseFloat(obstacle.style.left);
+        left -= 7;
+        obstacle.style.left = left + "px";
 
         // collision
         if (left < 85 && left > 40 && y < 30) {
-            reset();
+            gameOver();
         }
 
-        // remove off screen
-        if (left < -40) {
-            o.remove();
-            obstacles.splice(i, 1);
-            i--;
+        if (left < -50) {
+            obstacle.remove();
+            obstacle = null;
         }
     }
 
     requestAnimationFrame(loop);
 }
 
-/* reset */
-function reset() {
-    alert("Game Over");
-
-    obstacles.forEach(o => o.remove());
-    obstacles = [];
-
+/* GAME OVER */
+function gameOver() {
     running = false;
-    menu.style.display = "grid";
-    game.style.display = "none";
+    overlay.style.display = "block";
 
-    y = 0;
-    vel = 0;
+    setTimeout(() => {
+        location.reload(); // back to home screen reset
+    }, 1500);
 }
 </script>
 
