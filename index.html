@@ -1,203 +1,219 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Cube Jump</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGames</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* Hide scrollbars */
+            font-family: sans-serif;
+            background-color: white; /* Default background */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+        }
 
-<style>
-body {
-    margin: 0;
-    font-family: Arial;
-    overflow: hidden;
-    background: white;
-}
+        #topImage {
+            width: 100%;
+            max-width: 800px; /* Adjust as needed */
+            margin-top: 20px;
+            display: block;
+            object-fit: contain;
+        }
 
-/* HOME SCREEN */
-#home {
-    height: 100vh;
-    background: white;
-    text-align: center;
-}
+        #startButtonContainer {
+            margin-top: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
 
-/* TITLE */
-#title {
-    font-size: 60px;
-    font-weight: bold;
-    margin-top: 20px;
-}
+        #startButton {
+            background-color: gray;
+            color: white;
+            padding: 20px 40px;
+            font-size: 24px;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
 
-/* PNG */
-#logo {
-    max-width: 200px;
-    margin-top: 10px;
-}
+        #startButton:hover {
+            background-color: darkgray;
+        }
 
-/* START BOX */
-#start {
-    width: 200px;
-    height: 120px;
-    margin: 40px auto;
-    background: #ccc;
-    border: 3px solid black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 22px;
-    cursor: pointer;
-}
+        #gameContainer {
+            display: none; /* Hidden until game starts */
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background-color: white; /* Game background */
+            overflow: hidden;
+        }
 
-/* GAME SCREEN */
-#game {
-    display: none;
-    width: 100%;
-    height: 100vh;
-    background: white;
-    position: relative;
-    overflow: hidden;
-}
+        #groundLine {
+            position: absolute;
+            bottom: 50px; /* Adjust as needed for cube to stand on */
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background-color: black;
+        }
 
-/* ground line */
-#ground {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 4px;
-    background: black;
-}
+        #cube {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: black;
+            bottom: 55px; /* On top of the ground line */
+            left: 100px;
+            transition: bottom 0.2s ease-out; /* For smooth jumping */
+        }
 
-/* cube */
-#cube {
-    position: absolute;
-    left: 60px;
-    bottom: 4px;
-    width: 40px;
-    height: 40px;
-    background: black;
-}
-
-/* cactus */
-#cactus {
-    position: absolute;
-    bottom: 4px;
-    width: 25px;
-    height: 45px;
-    background: green;
-}
-</style>
+        #cactus {
+            position: absolute;
+            width: 30px;
+            height: 100px; /* Tall green block */
+            background-color: green;
+            bottom: 55px; /* On top of the ground line */
+            right: -50px; /* Start off-screen to the right */
+        }
+    </style>
 </head>
-
 <body>
 
-<!-- HOME -->
-<div id="home">
-    <div id="title">CUBE JUMP</div>
-    <img id="logo" src="WebGames.png">
-    <div id="start" onclick="startGame()">START</div>
-</div>
+    <img id="topImage" src="WebGames.png" alt="WebGames Logo">
 
-<!-- GAME -->
-<div id="game">
-    <div id="ground"></div>
-    <div id="cube"></div>
-    <div id="cactus"></div>
-</div>
+    <div id="startButtonContainer">
+        <button id="startButton">START</button>
+    </div>
 
-<script>
-let home = document.getElementById("home");
-let game = document.getElementById("game");
-let cube = document.getElementById("cube");
-let cactus = document.getElementById("cactus");
+    <div id="gameContainer">
+        <div id="groundLine"></div>
+        <div id="cube"></div>
+        <div id="cactus"></div>
+    </div>
 
-let y = 0;
-let vel = 0;
-let gravity = 0.8;
-let jumping = false;
+    <script>
+        const startButton = document.getElementById('startButton');
+        const topImage = document.getElementById('topImage');
+        const startButtonContainer = document.getElementById('startButtonContainer');
+        const gameContainer = document.getElementById('gameContainer');
+        const cube = document.getElementById('cube');
+        const cactus = document.getElementById('cactus');
+        const groundLine = document.getElementById('groundLine');
 
-let running = false;
-let x = 200;
-let started = false;
+        let isJumping = false;
+        let gameStarted = false;
+        let cactusSpeed = 5; // Adjust for faster/slower cactus
+        let cactusInterval;
+        let cubeBottom = 55; // Initial position for the cube
+        const jumpHeight = 150; // How high the cube jumps
 
-/* START GAME */
-function startGame() {
-    home.style.display = "none";
-    game.style.display = "block";
-
-    running = true;
-    started = false;
-
-    x = 200; // start cactus OFF SCREEN (fix instant death)
-
-    setTimeout(() => {
-        started = true; // cactus only starts AFTER 10 sec
-    }, 10000);
-
-    loop();
-}
-
-/* JUMP */
-function jump() {
-    if (!jumping && running) {
-        vel = 12;
-        jumping = true;
-    }
-}
-
-document.addEventListener("keydown", e => {
-    if (e.code === "Space") jump();
-});
-
-document.addEventListener("touchstart", jump);
-
-/* LOOP */
-function loop() {
-    if (!running) return;
-
-    // physics
-    y += vel;
-    vel -= gravity;
-
-    if (y < 0) {
-        y = 0;
-        jumping = false;
-    }
-
-    cube.style.bottom = (4 + y) + "px";
-
-    // cactus ONLY moves after 10 seconds
-    if (started) {
-        x -= 7;
-        cactus.style.left = x + "px";
-
-        // reset cactus when off screen
-        if (x < -50) {
-            x = 200;
+        // Function to reset the game to its initial state
+        function resetGame() {
+            gameStarted = false;
+            if (cactusInterval) clearInterval(cactusInterval); // Stop cactus movement
+            
+            topImage.style.display = 'block';
+            startButtonContainer.style.display = 'flex';
+            gameContainer.style.display = 'none';
+            
+            // Reset cube and cactus positions
+            cube.style.bottom = `${cubeBottom}px`;
+            cactus.style.right = '-50px';
         }
 
-        // collision
-        if (x < 90 && x > 40 && y < 30) {
-            gameOver();
+        startButton.addEventListener('click', () => {
+            startGame();
+        });
+
+        function startGame() {
+            gameStarted = true;
+            topImage.style.display = 'none';
+            startButtonContainer.style.display = 'none';
+            gameContainer.style.display = 'block';
+
+            // Start cactus movement after 5 seconds
+            setTimeout(() => {
+                moveCactus();
+            }, 5000);
         }
-    } else {
-        cactus.style.left = "200px"; // keep it off screen before start
-    }
 
-    requestAnimationFrame(loop);
-}
+        function jump() {
+            if (!isJumping && gameStarted) {
+                isJumping = true;
+                let jumpCount = 0;
+                const jumpUpInterval = setInterval(() => {
+                    if (jumpCount < jumpHeight) {
+                        cubeBottom += 5;
+                        cube.style.bottom = `${cubeBottom}px`;
+                        jumpCount += 5;
+                    } else {
+                        clearInterval(jumpUpInterval);
+                        const fallInterval = setInterval(() => {
+                            if (cubeBottom > 55) { // Fall back to original position
+                                cubeBottom -= 5;
+                                cube.style.bottom = `${cubeBottom}px`;
+                            } else {
+                                clearInterval(fallInterval);
+                                isJumping = false;
+                                cube.style.bottom = '55px'; // Ensure it lands exactly on the ground
+                            }
+                        }, 20); // Fall speed
+                    }
+                }, 20); // Jump speed
+            }
+        }
 
-/* GAME OVER */
-function gameOver() {
-    running = false;
+        document.addEventListener('keydown', (event) => {
+            // Spacebar for PC
+            if (event.code === 'Space') {
+                jump();
+            }
+        });
 
-    alert("GAME OVER");
+        document.addEventListener('touchstart', () => {
+             // Tap on mobile
+            jump();
+        });
 
-    // reset back to home
-    home.style.display = "block";
-    game.style.display = "none";
 
-    y = 0;
-    vel = 0;
-}
-</script>
+        function moveCactus() {
+            let cactusRight = -50;
+            cactus.style.right = `${cactusRight}px`; // Reset position at the start
+            cactusInterval = setInterval(() => {
+                cactusRight += cactusSpeed;
+                cactus.style.right = `${cactusRight}px`;
 
+                // Check for collision
+                const cubeRect = cube.getBoundingClientRect();
+                const cactusRect = cactus.getBoundingClientRect();
+
+                if (
+                    cactusRect.left < cubeRect.right &&
+                    cactusRect.right > cubeRect.left &&
+                    cactusRect.top < cubeRect.bottom &&
+                    cactusRect.bottom > cubeRect.top
+                ) {
+                    // Collision detected! Go back to home page (reset game)
+                    resetGame();
+                }
+
+                // If cactus goes off screen to the left, reset its position
+                if (cactusRight > window.innerWidth + 50) {
+                    cactusRight = -50; // Reset off-screen to the right
+                }
+            }, 20); // Cactus movement speed
+        }
+
+        resetGame(); // Ensure game is in initial state on load
+    </script>
 </body>
 </html>
