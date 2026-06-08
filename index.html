@@ -111,10 +111,10 @@
 
         let isJumping = false;
         let gameStarted = false;
-        let cactusSpeed = 5; // Adjust for faster/slower cactus
+        let cactusSpeed = 7; // Adjust for faster/slower cactus
         let cactusInterval;
         let cubeBottom = 55; // Initial position for the cube
-        const jumpHeight = 150; // How high the cube jumps
+        const jumpHeight = 170; // How high the cube jumps
 
         // Function to reset the game to its initial state
         function resetGame() {
@@ -140,10 +140,10 @@
             startButtonContainer.style.display = 'none';
             gameContainer.style.display = 'block';
 
-            // Start cactus movement after 5 seconds
+            // Start cactus movement after 3 seconds
             setTimeout(() => {
                 moveCactus();
-            }, 5000);
+            }, 3000);
         }
 
         function jump() {
@@ -154,7 +154,7 @@
                     if (jumpCount < jumpHeight) {
                         cubeBottom += 5;
                         cube.style.bottom = `${cubeBottom}px`;
-                        jumpCount += 5;
+                        jumpCount += 3;
                     } else {
                         clearInterval(jumpUpInterval);
                         const fallInterval = setInterval(() => {
@@ -166,9 +166,9 @@
                                 isJumping = false;
                                 cube.style.bottom = '55px'; // Ensure it lands exactly on the ground
                             }
-                        }, 20); // Fall speed
+                        }, 50); // Fall speed
                     }
-                }, 20); // Jump speed
+                }, 50); // Jump speed
             }
         }
 
@@ -210,7 +210,7 @@
                 if (cactusRight > window.innerWidth + 50) {
                     cactusRight = -50; // Reset off-screen to the right
                 }
-            }, 20); // Cactus movement speed
+            }, 40); // Cactus movement speed
         }
 
         resetGame(); // Ensure game is in initial state on load
